@@ -6,10 +6,16 @@ public class MeshScript : MonoBehaviour {
 
 
     public Material myMaterial;
-    [Range(0.2f,50f)]
+    [Range(1,10)]
+    public int numberOfApplications = 1;
+    [Range(1f,5f)]
     public float spread;
-    [Range(0.1f, 5f)]
-    public float multiplier;
+    [Range(1f, 5f)]
+    public float multiplier = 1;
+    [Range(0, 1)]
+    public float water = 0.5f;
+    [Range(0, 1)]
+    public float mountains = 0.5f;
     public bool alterCurrent;
     public Mesh baseMesh;
     private Mesh myMesh;
@@ -38,11 +44,11 @@ public class MeshScript : MonoBehaviour {
 
 	void Update ()
     {
-        if (Input.GetKeyDown(KeyCode.Space)) transition = false;
+        if (Input.GetKeyDown(KeyCode.Space)) { transition = false; myMeshCollider.sharedMesh = myMesh; }
         if (Input.GetKeyDown(KeyCode.R)) RestartMesh();
         if (Input.GetKeyDown(KeyCode.Alpha1)) TransitionToBase();
 	    if (Input.GetKeyDown(KeyCode.Alpha2)) MakeMeshSpherical(myMesh, myRadius);
-        if (Input.GetKeyDown(KeyCode.Alpha3)) ApplyPerlinNoise(myMesh, new Vector3(Random.Range(0, 100), Random.Range(0, 100), Random.Range(0,100)), spread, multiplier, alterCurrent);
+        if (Input.GetKeyDown(KeyCode.Alpha3)) ApplyPerlinNoise(myMesh, new Vector3(Random.Range(0, 100), Random.Range(0, 100), Random.Range(0,100)), spread, multiplier,numberOfApplications, alterCurrent);
         if (Input.GetKeyDown(KeyCode.I)) Info(myMesh);
 
         transform.Rotate(new Vector2(5, 15)*Time.deltaTime);
@@ -50,14 +56,15 @@ public class MeshScript : MonoBehaviour {
         if (transition)
         {
             timer += Time.deltaTime;
+
             SmoothTransition(timer);
-            if (timer > 1)
-            {
-                transition = false;
-                timer = 0;
-                myMeshCollider.sharedMesh = myMesh;
-                ColorTexture();
-            }
+            //if (timer > 1)
+            //{
+            //    transition = false;
+            //    timer = 0;
+            //    myMeshCollider.sharedMesh = myMesh;
+            //    //ColorTexture();
+            //}
         }
         RaycastHit hit;
         if (Input.GetMouseButtonDown(0) && Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition),out hit))
@@ -96,14 +103,25 @@ public class MeshScript : MonoBehaviour {
         myRadius = radius;
     }
 
-    void ApplyPerlinNoise(Mesh mesh, Vector3 offset, float spread, float multiplier = 1, bool current = false)
+    void ApplyPerlinNoise(Mesh mesh, Vector3 offset, float spread, float multiplier = 1, int numberOfApplications = 1, bool current = false)
     {
         startVerts = myMesh.vertices;
         Vector3[] vertices = current ? mesh.vertices : baseMesh.vertices;
-        for (int i = 0; i < vertices.Length; i++)
+
+        for (int i =0;i< vertices.Length;i++)
         {
-            perlinNoiseValues[i] = (Mathf.PerlinNoise(vertices[i].x * spread + offset.x, vertices[i].y * spread + offset.y) + (Mathf.PerlinNoise(vertices[i].z * spread + offset.z, vertices[i].y * spread + offset.y)) + (Mathf.PerlinNoise(vertices[i].x * spread + offset.x, vertices[i].z * spread + offset.z)))/3;
-            targetVerts[i] = vertices[i].normalized * (myRadius + (perlinNoiseValues[i]-0.5f) * multiplier);
+            perlinNoiseValues[i] = 0;
+        }
+        while (numberOfApplications > 0)
+        {
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                perlinNoiseValues[i] += ((Mathf.PerlinNoise(vertices[i].x * spread + offset.x, vertices[i].y * spread + offset.y) + (Mathf.PerlinNoise(vertices[i].z * spread + offset.z, vertices[i].y * spread + offset.y)) + (Mathf.PerlinNoise(vertices[i].x * spread + offset.x, vertices[i].z * spread + offset.z)))-1.5f) * multiplier/20;
+                targetVerts[i] = vertices[i].normalized * (myRadius + (perlinNoiseValues[i]) );
+            }
+            numberOfApplications--;
+            multiplier *=0.5f;
+            spread *= 2;
         }
         transition = true;
         timer = 0;
@@ -129,10 +147,14 @@ public class MeshScript : MonoBehaviour {
         {
             currVerts[i] = Vector3.Lerp(startVerts[i], targetVerts[i], timer);
             float magnitude = currVerts[i].magnitude;
-            if (magnitude < 1.01f* myRadius) { colors[i] = new Color(0, 0, 0.8f); }
-            else if (magnitude >= 1.01f* myRadius && magnitude <myRadius*1.04f) {colors[i] = new Color(0.1f, 0.6f, 0.1f); }
-            else if (magnitude > myRadius * 1.04 && magnitude < myRadius * 1.1f) { colors[i] = new Color(0.3f, 0.3f, 0.3f); }
-            else colors[i] = new Color (0.8f,0.8f,0.8f);
+            if (magnitude < (0.5f + water) * myRadius) { currVerts[i] = targetVerts[i].normalized * myRadius * (0.49f + water); colors[i] = new Color(0, 0, 0.8f); }
+            else if (magnitude >= (0.5f + water) * myRadius && magnitude < myRadius * (0.57f + water)) { colors[i] = new Color(0.1f, 0.6f, 0.1f); }
+            else if (magnitude > myRadius * (0.57f + water) && magnitude < myRadius * (1.1f + water - mountains)) { colors[i] = new Color(0.3f, 0.3f, 0.3f); }
+            else
+            {
+                currVerts[i] = targetVerts[i].normalized * (myRadius+(perlinNoiseValues[i]*(1+mountains)));
+                colors[i] = new Color(0.8f, 0.8f, 0.8f);
+            }
         }
         myMesh.vertices = currVerts;
         myMesh.colors = colors;
@@ -159,7 +181,7 @@ public class MeshScript : MonoBehaviour {
         myMeshFilter.mesh = myMesh;
         myMeshCollider.sharedMesh = myMesh;
         CalculateUVs(myMesh);
-        ColorTexture();
+        //ColorTexture();
         GetComponent<MeshRenderer>().material = myMaterial;
         myMesh.RecalculateNormals();
 
@@ -179,7 +201,6 @@ public class MeshScript : MonoBehaviour {
                 tempVertsIndexes.Add(i);
             }
         }
-        
         Debug.Log(tempVertsIndexes.Count);
         return tempVertsIndexes;
     }
@@ -197,7 +218,7 @@ public class MeshScript : MonoBehaviour {
         for(int i = 0; i<count; i++)
         {
             Vector3 vertice =verts[i].normalized;
-            tmpUVs[i] = new Vector2((Mathf.Atan2(vertice.x, vertice.z) / Mathf.PI + 1f)*0.5f, vertice.y * 0.5f + 0.5f);
+            tmpUVs[i] = new Vector2((Mathf.Atan2(vertice.x, vertice.z) / Mathf.PI )*0.5f, vertice.y * 0.5f + 0.5f);
         }
         myMesh.uv = tmpUVs;
     }
@@ -216,7 +237,7 @@ public class MeshScript : MonoBehaviour {
         {
             while(curPixel< countOfPixels)
             {
-                tmpColors[curPixel] = new Color(0, 0, tmpPerlins[currUV]);
+                tmpColors[curPixel] = new Color(tmpPerlins[currUV], tmpPerlins[currUV], tmpPerlins[currUV]);
                 curPixel++;
                 if (curPixel >= (currUV + 1) * pixelsPerUV) break;
             }
@@ -227,5 +248,4 @@ public class MeshScript : MonoBehaviour {
         myTexture.SetPixels(tmpColors);
         myTexture.Apply();
     }
-
 }
