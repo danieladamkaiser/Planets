@@ -177,7 +177,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2190654fd7310b439814b13c1a6744d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spread: 11
+  myMaterial: {fileID: 2100000, guid: c5b88f87f3d58cd49b2712bfb684b58c, type: 2}
+  spread: 42.7
   multiplier: 0.1
   alterCurrent: 0
   baseMesh: {fileID: 4300000, guid: ae50b8b459d895942b253137365634ba, type: 3}

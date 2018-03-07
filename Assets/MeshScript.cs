@@ -27,7 +27,7 @@ public class MeshScript : MonoBehaviour {
         myMeshCollider = GetComponent<MeshCollider>();
         myMeshFilter = GetComponent<MeshFilter>();
         myTexture = new Texture2D(2048,1024);
-        //myMaterial.mainTexture = myTexture;
+        myMaterial.mainTexture = myTexture;
         GetComponent<MeshRenderer>().material = myMaterial;
         RestartMesh();
     }
@@ -56,6 +56,7 @@ public class MeshScript : MonoBehaviour {
                 transition = false;
                 timer = 0;
                 myMeshCollider.sharedMesh = myMesh;
+                ColorTexture();
             }
         }
         RaycastHit hit;
@@ -102,7 +103,7 @@ public class MeshScript : MonoBehaviour {
         for (int i = 0; i < vertices.Length; i++)
         {
             perlinNoiseValues[i] = (Mathf.PerlinNoise(vertices[i].x * spread + offset.x, vertices[i].y * spread + offset.y) + (Mathf.PerlinNoise(vertices[i].z * spread + offset.z, vertices[i].y * spread + offset.y)) + (Mathf.PerlinNoise(vertices[i].x * spread + offset.x, vertices[i].z * spread + offset.z)))/3;
-            targetVerts[i] = vertices[i] * (myRadius + perlinNoiseValues[i] * multiplier/2);
+            targetVerts[i] = vertices[i].normalized * (myRadius + (perlinNoiseValues[i]-0.5f) * multiplier);
         }
         transition = true;
         timer = 0;
@@ -185,7 +186,7 @@ public class MeshScript : MonoBehaviour {
 
     void Info(Mesh mesh)
     {
-        Debug.Log("Vertices: " + mesh.vertices.Length + ", UVs: " + mesh.uv.Length + ", Triangles: " + mesh.triangles.Length + ", Pixels in texture: " + myTexture.GetPixels().Length);
+        Debug.Log("Vertices: " + mesh.vertices.Length + ", UVs: " + mesh.uv.Length + ", Triangles: " + mesh.triangles.Length + ", Pixels in texture: " + myTexture.GetPixels().Length + " ,PerlinsNoise: " + perlinNoiseValues[0] + " " + perlinNoiseValues[100] + " " + perlinNoiseValues[300] + " " + perlinNoiseValues[500]);
     }
 
     void CalculateUVs(Mesh mesh)
@@ -215,8 +216,7 @@ public class MeshScript : MonoBehaviour {
         {
             while(curPixel< countOfPixels)
             {
-                //Debug.Log(tmpPerlins[currUV]);
-                tmpColors[curPixel] = new Color(tmpPerlins[currUV], 0, 0);
+                tmpColors[curPixel] = new Color(0, 0, tmpPerlins[currUV]);
                 curPixel++;
                 if (curPixel >= (currUV + 1) * pixelsPerUV) break;
             }
