@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MeshScript : MonoBehaviour {
+public class PlanetMonoBehaviour : MonoBehaviour
+{
 
 
     public Material myMaterial;
@@ -28,8 +29,11 @@ public class MeshScript : MonoBehaviour {
     private Vector3[] targetVerts;
     private MeshCollider myMeshCollider;
     private float[] perlinNoiseValues;
+    private Rigidbody myRigidBody;
+
     void Awake()
     {
+        myRigidBody = GetComponent<Rigidbody>();
         myMeshCollider = GetComponent<MeshCollider>();
         myMeshFilter = GetComponent<MeshFilter>();
         myTexture = new Texture2D(2048,1024);
@@ -39,7 +43,7 @@ public class MeshScript : MonoBehaviour {
     }
     void Start()
     {
-        //ApplyPerlinNoise(myMesh, new Vector2(Random.Range(0, 100), Random.Range(0, 100)), spread, multiplier, alterCurrent);
+        ApplyPerlinNoise(myMesh, new Vector2(Random.Range(0, 100), Random.Range(0, 100)), spread, multiplier,numberOfApplications, alterCurrent);
     }
 
 	void Update ()
@@ -58,13 +62,13 @@ public class MeshScript : MonoBehaviour {
             timer += Time.deltaTime;
 
             SmoothTransition(timer);
-            //if (timer > 1)
-            //{
-            //    transition = false;
-            //    timer = 0;
-            //    myMeshCollider.sharedMesh = myMesh;
-            //    //ColorTexture();
-            //}
+            if (timer > 1)
+            {
+                transition = false;
+                timer = 0;
+                myMeshCollider.sharedMesh = myMesh;
+                //ColorTexture();
+            }
         }
         RaycastHit hit;
         if (Input.GetMouseButtonDown(0) && Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition),out hit))
