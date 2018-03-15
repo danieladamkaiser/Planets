@@ -43,18 +43,32 @@ public class PlanetMonoBehaviour : MonoBehaviour
     }
     void Start()
     {
-        ApplyPerlinNoise(myMesh, new Vector2(Random.Range(0, 100), Random.Range(0, 100)), spread, multiplier,numberOfApplications, alterCurrent);
+        ApplyPerlinNoise(myMesh, new Vector3(Random.Range(0, 100), Random.Range(0, 100), Random.Range(0,100)), spread, multiplier,numberOfApplications, alterCurrent);
     }
 
-	void Update ()
+    void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space)) { transition = false; myMeshCollider.sharedMesh = myMesh; }
-        if (Input.GetKeyDown(KeyCode.R)) RestartMesh();
-        if (Input.GetKeyDown(KeyCode.Alpha1)) TransitionToBase();
-	    if (Input.GetKeyDown(KeyCode.Alpha2)) MakeMeshSpherical(myMesh, myRadius);
-        if (Input.GetKeyDown(KeyCode.Alpha3)) ApplyPerlinNoise(myMesh, new Vector3(Random.Range(0, 100), Random.Range(0, 100), Random.Range(0,100)), spread, multiplier,numberOfApplications, alterCurrent);
-        if (Input.GetKeyDown(KeyCode.I)) Info(myMesh);
-
+        /*  if (Input.GetKeyDown(KeyCode.Space)) { transition = false; myMeshCollider.sharedMesh = myMesh; }
+            if (Input.GetKeyDown(KeyCode.R)) RestartMesh();
+            if (Input.GetKeyDown(KeyCode.Alpha1)) TransitionToBase();
+            if (Input.GetKeyDown(KeyCode.Alpha2)) MakeMeshSpherical(myMesh, myRadius);
+            if (Input.GetKeyDown(KeyCode.Alpha3)) ApplyPerlinNoise(myMesh, new Vector3(Random.Range(0, 100), Random.Range(0, 100), Random.Range(0,100)), spread, multiplier,numberOfApplications, alterCurrent);
+            if (Input.GetKeyDown(KeyCode.I)) Info(myMesh);
+        
+            RaycastHit hit;
+            if (Input.GetMouseButtonDown(0) && Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition),out hit))
+            {
+                if (transition)
+                    myMeshCollider.sharedMesh = myMesh;
+                ChangeAtPoint(myMesh, hit.point,1.2f);
+            } 
+            if (Input.GetMouseButtonDown(1) && Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit))
+            {
+                if (transition)
+                    myMeshCollider.sharedMesh = myMesh;
+                ChangeAtPoint(myMesh, hit.point,0.8f);
+            }
+            */
         transform.Rotate(new Vector2(5, 15)*Time.deltaTime);
 	
         if (transition)
@@ -69,19 +83,6 @@ public class PlanetMonoBehaviour : MonoBehaviour
                 myMeshCollider.sharedMesh = myMesh;
                 //ColorTexture();
             }
-        }
-        RaycastHit hit;
-        if (Input.GetMouseButtonDown(0) && Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition),out hit))
-        {
-            if (transition)
-                myMeshCollider.sharedMesh = myMesh;
-            ChangeAtPoint(myMesh, hit.point,1.2f);
-        } 
-        if (Input.GetMouseButtonDown(1) && Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit))
-        {
-            if (transition)
-                myMeshCollider.sharedMesh = myMesh;
-            ChangeAtPoint(myMesh, hit.point,0.8f);
         }
 	}
 
